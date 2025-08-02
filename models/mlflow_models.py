@@ -57,4 +57,14 @@ for param in params_grid:
         mlflow.log_metric("f1_score", f1)
 
         # Log the model
-        mlflow.sklearn.log_model(model, f"model_C_{str(params_grid.index(param))}")
+        mlflow.sklearn.log_model(model, artifact_path="model")
+
+# Step 5: Register the best model
+best_model_run = mlflow.search_runs(order_by=["metrics.accuracy desc"]).iloc[0]
+mlflow.register_model(f"runs:/{best_model_run.run_id}/model", "Best_Logistic_Regression_Model")
+
+# Step 6: Save the best model to output directory
+import os
+output_dir = "outputs/"
+os.makedirs(output_dir, exist_ok=True)
+mlflow.sklearn.save_model(model, os.path.join(output_dir, "best_model"))
