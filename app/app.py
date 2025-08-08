@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, render_template
 import joblib
 import numpy as np
 
@@ -6,7 +6,7 @@ import numpy as np
 model = joblib.load('outputs/best_model/model.pkl')
 
 # Initialize Flask app
-app = Flask(__name__)
+app = Flask(__name__, template_folder='template')
 
 @app.route('/predict', methods=['POST'])
 def predict():
@@ -29,7 +29,7 @@ def predict():
     
 @app.route('/')
 def home():
-    return "Welcome to the ML Prediction API! Use the /predict endpoint to make predictions."
+    return render_template('index.html')
 
 if __name__ == '__main__':
     app.run(debug=True, port=5050)
