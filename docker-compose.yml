@@ -1,0 +1,37 @@
+version: '1'
+services:
+  mlflow-ui:
+    build:
+      context: .
+      dockerfile: dockerfile.mlflowui
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./mlruns:/app/mlruns
+      - ./outputs:/app/outputs
+
+  train:
+    build:
+      context: .
+      dockerfile: dockerfile.train
+    depends_on:
+      - mlflow-ui
+    environment:
+      - MLFLOW_TRACKING_URI=http://mlflow-ui:5000
+    volumes:
+      - ./mlruns:/app/mlruns
+      - ./outputs:/app/outputs
+
+  app:
+    build:
+      context: .
+      dockerfile: dockerfile.app
+    ports:
+      - "5050:5050"
+    depends_on:
+      - mlflow-ui
+    environment:
+      - MLFLOW_TRACKING_URI=http://mlflow-ui:5000
+    volumes:
+      - ./mlruns:/app/mlruns
+      - ./outputs:/app/outputs
