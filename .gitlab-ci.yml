@@ -1,0 +1,44 @@
+stages:
+  - build
+  - test
+
+variables:
+  DOCKER_DRIVER: overlay2
+  DOCKER_IMAGE: hieutt61
+
+# Job build images
+build-images:
+  stage: build
+  image: docker:stable  # Base image to build Docker
+  services:
+    - docker:dind  # Docker-in-Docker to run Docker commands
+  script:
+    - docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD
+    - docker build -f dockerfile.train -t $DOCKER_IMAGE/mlflow-train:latest .
+    - docker build -f dockerfile.app -t $DOCKER_IMAGE/flask-api:latest .
+    - docker build -f dockerfile.mlflowui -t $DOCKER_IMAGE/mlflow-ui:latest .
+    - docker push $DOCKER_IMAGE/mlflow-train:latest
+    - docker push $DOCKER_IMAGE/flask-api:latest
+    - docker push $DOCKER_IMAGE/mlflow-ui:latest
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+
+# Job test: Run train và test API
+test-train-and-api:
+  stage: test
+  image: docker:stable
+  services:
+    - docker:dind
+  script:
+    - docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD
+    - docker network create my-network || true
+    - docker pull $DOCKER_IMAGE/mlflow-ui:latest
+    - docker run -d --name mlflow-ui -p 5000:5000 $DOCKER_IMAGE/mlflow-ui:latest  # Start MLflow UI
+    - sleep 10
+    - docker pull $DOCKER_IMAGE/mlflow-train:latest
+    - docker run --network=container:mlflow-ui $DOCKER_IMAGE/mlflow-train:latest  # Run train, connect to UI
+    - docker pull $DOCKER_IMAGE/flask-api:latest
+    - docker run -d --name flask-api -p 5050:5050 --network=my-network $DOCKER_IMAGE/flask-api:latest  # Start API
+    - sleep 10
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'

@@ -1,0 +1,5 @@
+Link Gitlab repository: https://gitlab.com/hieu24mse23185/MSE_DDM501_MLOPS.git
+Link Docker hub:
+    + https://hub.docker.com/r/hieutt61/mlflow-ui
+    + https://hub.docker.com/r/hieutt61/flask-api
+    + https://hub.docker.com/r/hieutt61/mlflow-train
